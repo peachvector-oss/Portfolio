@@ -1,7 +1,26 @@
 import { useEffect, useRef, useState } from "react";
-import { Trophy, Award, Star, Plus } from "lucide-react";
+import { Trophy, Award, Star, LucideIcon } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import TuringImage from "./assets/Turing.jpg";
+import ActsmartImage from "./assets/actsmart.jpg";
 
-const achievements = [
+interface Achievement {
+  title: string;
+  event: string;
+  project: string;
+  year: string;
+  icon: LucideIcon;
+  highlight: boolean;
+  image?: string;
+  imageAlt?: string;
+}
+
+const achievements: Achievement[] = [
   {
     title: "Top 3 Startups",
     event: "Hackathon in Siem Reap",
@@ -9,6 +28,8 @@ const achievements = [
     year: "2024",
     icon: Trophy,
     highlight: true,
+    image: TuringImage,
+    imageAlt: "Top 3 Startups Award - Hackathon Siem Reap",
   },
   {
     title: "Finalist",
@@ -17,12 +38,14 @@ const achievements = [
     year: "2024",
     icon: Award,
     highlight: true,
+    image: ActsmartImage,
+    imageAlt: "Finalist Certificate - Secure Actsmart Hackathon",
   },
   {
-    title: "More Coming Soon",
-    event: "Future Achievement",
-    project: "Placeholder for upcoming wins",
-    year: "—",
+    title: "Coming Soon",
+    event: "Waiting for the next opportunity...",
+    project: "The journey continues",
+    year: "2025",
     icon: Star,
     highlight: false,
   },
@@ -30,6 +53,7 @@ const achievements = [
 
 const AchievementsSection = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string } | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -75,7 +99,7 @@ const AchievementsSection = () => {
               <div className="space-y-8">
                 {achievements.map((achievement, index) => (
                   <div
-                    key={achievement.title}
+                    key={`${achievement.title}-${achievement.year}`}
                     className={`relative flex items-center gap-8 ${
                       index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
                     }`}
@@ -93,43 +117,64 @@ const AchievementsSection = () => {
                       }`}
                     >
                       <div
-                        className={`bg-background border rounded-lg p-6 card-hover-lift transition-all duration-300 ${
+                        className={`bg-background border rounded-lg overflow-hidden card-hover-lift transition-all duration-300 ${
                           achievement.highlight
                             ? "border-primary box-glow"
                             : "border-border"
                         }`}
                       >
-                        <div className="flex items-start gap-4">
+                        {/* Achievement Image */}
+                        {achievement.image && (
                           <div
-                            className={`p-3 rounded-lg ${
-                              achievement.highlight
-                                ? "bg-primary/20"
-                                : "bg-secondary"
-                            }`}
+                            className="relative h-32 bg-secondary/50 cursor-pointer group overflow-hidden"
+                            onClick={() => setSelectedImage({ src: achievement.image!, alt: achievement.imageAlt || achievement.title })}
                           >
-                            <achievement.icon
-                              className={`w-6 h-6 ${
-                                achievement.highlight
-                                  ? "text-primary"
-                                  : "text-muted-foreground"
-                              }`}
+                            <img
+                              src={achievement.image}
+                              alt={achievement.imageAlt || achievement.title}
+                              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                             />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-1">
-                              <h3 className="text-lg font-semibold text-foreground">
-                                {achievement.title}
-                              </h3>
-                              <span className="text-sm text-muted-foreground">
-                                {achievement.year}
+                            <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors duration-300 flex items-center justify-center">
+                              <span className="text-xs text-primary-foreground bg-primary/80 px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                Click to enlarge
                               </span>
                             </div>
-                            <p className="text-primary text-sm mb-1">
-                              {achievement.event}
-                            </p>
-                            <p className="text-muted-foreground text-sm">
-                              {achievement.project}
-                            </p>
+                          </div>
+                        )}
+
+                        <div className="p-6">
+                          <div className="flex items-start gap-4">
+                            <div
+                              className={`p-3 rounded-lg ${
+                                achievement.highlight
+                                  ? "bg-primary/20"
+                                  : "bg-secondary"
+                              }`}
+                            >
+                              <achievement.icon
+                                className={`w-6 h-6 ${
+                                  achievement.highlight
+                                    ? "text-primary"
+                                    : "text-muted-foreground"
+                                }`}
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-1">
+                                <h3 className="text-lg font-semibold text-foreground">
+                                  {achievement.title}
+                                </h3>
+                                <span className="text-sm text-muted-foreground">
+                                  {achievement.year}
+                                </span>
+                              </div>
+                              <p className="text-primary text-sm mb-1">
+                                {achievement.event}
+                              </p>
+                              <p className="text-muted-foreground text-sm">
+                                {achievement.project}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -144,6 +189,22 @@ const AchievementsSection = () => {
           </div>
         </div>
       </div>
+
+      {/* Lightbox Modal */}
+      <Dialog open={!!selectedImage} onOpenChange={() => setSelectedImage(null)}>
+        <DialogContent className="max-w-3xl bg-background border-border">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">{selectedImage?.alt}</DialogTitle>
+          </DialogHeader>
+          {selectedImage && (
+            <img
+              src={selectedImage.src}
+              alt={selectedImage.alt}
+              className="w-full h-auto rounded-lg"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </section>
   );
 };
